@@ -127,8 +127,15 @@ function jobFactStatusLabel(job: JobRecord) {
   return "面试邀约已确认；完整 JD 待补全";
 }
 
+function isValidDailyTime(value: string) {
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+}
+
 function nextDailyRun(localTime: string, from = new Date()) {
-  const [hours, minutes] = localTime.split(":").map(Number);
+  // time input can emit "" (cleared/partial); an invalid value here would
+  // produce an Invalid Date and toISOString() would throw.
+  const safeTime = isValidDailyTime(localTime) ? localTime : "09:00";
+  const [hours, minutes] = safeTime.split(":").map(Number);
   const next = new Date(from);
   next.setHours(hours, minutes, 0, 0);
   if (next.getTime() <= from.getTime()) next.setDate(next.getDate() + 1);
@@ -926,7 +933,10 @@ export function JobCopilotApp() {
       ...current,
       enabled,
       due: false,
-      nextRunAt: enabled ? nextDailyRun(current.localTime) : null,
+      nextRunAt:
+        enabled && isValidDailyTime(current.localTime)
+          ? nextDailyRun(current.localTime)
+          : null,
     }));
   }
 
@@ -934,7 +944,10 @@ export function JobCopilotApp() {
     setDailyJob((current) => ({
       ...current,
       localTime,
-      nextRunAt: current.enabled ? nextDailyRun(localTime) : null,
+      nextRunAt:
+        current.enabled && isValidDailyTime(localTime)
+          ? nextDailyRun(localTime)
+          : null,
       due: false,
     }));
   }
