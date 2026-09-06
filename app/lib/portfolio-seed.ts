@@ -329,6 +329,23 @@ const qimingPrep: InterviewPrepMaterial = {
   ],
 };
 
+
+// 演示面试时间相对"现在"生成，保证 demo 永远有即将到来的面试（修复种子日期过期后提醒区消失）
+function upcomingAt(daysFromNow: number, utcHour: number): string {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + daysFromNow);
+  d.setUTCHours(utcHour, 0, 0, 0);
+  return d.toISOString();
+}
+
+function chinaDayLabel(iso: string): string {
+  const d = new Date(new Date(iso).getTime() + 8 * 60 * 60 * 1000);
+  return `${d.getUTCMonth() + 1} 月 ${d.getUTCDate()} 日`;
+}
+
+const qimingInterviewAt = upcomingAt(3, 6);   // 北京时间 14:00
+const shanhaiInterviewAt = upcomingAt(6, 8);  // 北京时间 16:00
+
 export const portfolioApplications: Record<string, ApplicationRecord> = {
   [jobs.yunfan.id]: application(
     jobs.yunfan,
@@ -370,20 +387,20 @@ export const portfolioApplications: Record<string, ApplicationRecord> = {
     ...application(
       jobs.qiming,
       "business_interview",
-      "7 月 27 日 14:00 第一轮业务面",
+      `${chinaDayLabel(qimingInterviewAt)} 14:00 第一轮业务面`,
       "2026-07-24T01:00:00.000Z",
     ),
-    scheduledAt: "2026-07-27T06:00:00.000Z",
+    scheduledAt: qimingInterviewAt,
     interviewPrep: qimingPrep,
   },
   [jobs.shanhai.id]: {
     ...application(
       jobs.shanhai,
       "business_interview",
-      "7 月 30 日 16:00 交叉面",
+      `${chinaDayLabel(shanhaiInterviewAt)} 16:00 交叉面`,
       "2026-07-23T08:10:00.000Z",
     ),
-    scheduledAt: "2026-07-30T08:00:00.000Z",
+    scheduledAt: shanhaiInterviewAt,
   },
   [jobs.beichen.id]: {
     ...application(
