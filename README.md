@@ -6,31 +6,26 @@
 
 > ⚠️ **本仓库是公开演示版：所有候选人、公司、岗位、薪资、投递数据均为虚构。** 演示不访问任何真实岗位源、不连接任何账号、不上传任何数据。
 
-## 三种用法
+## 怎么用（按你手里有什么选）
 
-### 1. 线上试玩（最快）
+### A. 只有手机 / 网页版 AI（最多人走这条）
 
-> 部署链接筹备中——也可以直接看第 2 种，本地起来就是完整体验。
+不需要这个仓库。把 [`skill/求职参谋方法论.md`](skill/求职参谋方法论.md) 整个文件发给任何能联网的 AI（Claude / Kimi / 豆包 / ChatGPT），说"按这份指令执行"，贴上简历就开工——对话形式，没有界面，但判断力是一样的。
 
-- `/` 或 `/?portfolio=workspace`：一个已经运转起来的虚拟求职工作台
-- `/?portfolio=onboarding`：从一份虚拟简历开始，重播完整的首次设置流程
+### B. 电脑上装了 AI 助手（Claude Code / Codex / OpenClaw）
 
-### 2. 本地运行
+**你不需要懂 git，也不需要敲命令。** 复制下面这句话，粘给你的 AI 助手，剩下全是它的活：
 
-需要 Node.js ≥ 22.13：
+> 帮我安装求职工作台：把 https://github.com/cheney617/job-copilot-demo 下载到本地，装好依赖并启动，然后按仓库里 SKILL.md 的协议当我的求职参谋，从收我的简历开始。
 
-```bash
-git clone https://github.com/cheney617/job-copilot-demo.git
-cd job-copilot-demo
-npm install
-npm run dev
-```
+它会自己下载、安装、启动网页，然后开始和你做首次设置。之后你每天面对的是浏览器里的工作台，想刷新就对它说一句"今日扫描"。
 
-打开 http://localhost:3000 即可。简历解析（PDF/DOCX/Markdown/TXT）完全在你自己的设备上进行。
+### C. 程序员手动跑
 
-### 3. 配合 AI 助手（进阶）
+Node.js ≥ 22.13：`git clone` 本仓库 → `npm install` → `npm run dev` → 打开 http://localhost:3000。
+无数据文件时是虚拟数据演示（`/?portfolio=onboarding` 可重播首次设置流程）；写入 `public/data/workspace.json` 即进入本地数据模式（契约见 `SKILL.md` 与 `public/data/workspace.example.json`）。
 
-这个工作台是"壳"——看板、榜单、文档的容器。真正的搜岗、读 JD、打分判断，建议交给你的 AI 助手去做（配套的求职参谋 skill 是一份纯 Markdown 指令包，发给任何能联网的 AI 即可开工，领取方式见发布渠道）。
+简历解析（PDF/DOCX/Markdown/TXT）在任何模式下都只在你自己的设备上进行。
 
 ## 几个较真的设计
 
