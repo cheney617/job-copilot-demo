@@ -1,0 +1,81 @@
+{
+  "generatedAt": "2026-09-07T10:00:00.000Z",
+  "sourceNote": "示例：AI 参谋于 09-07 完成首轮搜索，覆盖官网直投与镜像站，2 个岗位进入今日推荐",
+  "currentCompanyExcludedCount": 1,
+  "profile": {
+    "fileName": "示例用户-简历.pdf",
+    "rawText": "（示例）3 年运营经验，做过用户增长与内容运营……",
+    "currentCompany": "示例科技",
+    "competencies": [
+      { "id": "growth", "title": "用户增长", "evidence": "（示例）DAU 增长实验与渠道投放", "selected": true },
+      { "id": "content", "title": "内容运营", "evidence": "（示例）内容池搭建与爆款方法沉淀", "selected": true }
+    ],
+    "extraStrength": ""
+  },
+  "candidates": [
+    {
+      "job": {
+        "id": "example-job-1",
+        "title": "用户增长运营专家",
+        "company": "本地数据示例公司",
+        "business": "（示例）由 AI 参谋写入的真实岗位放在这里",
+        "location": "上海",
+        "description": "（示例）负责核心产品增长实验与渠道运营。",
+        "requirements": "（示例）3 年以上增长经验；熟悉 A/B 实验。",
+        "sourceMode": "public_html",
+        "sourceLabel": "公司官网招聘页",
+        "sourceUrl": "https://example.com/careers/growth-ops",
+        "postedAt": "2026-09-05",
+        "liveStatus": "jd_verified",
+        "salary": "25K-35K · 14 薪"
+      },
+      "status": "recommended",
+      "label": "强匹配 · 建议今天投",
+      "matchReasons": ["（示例）增长实验经验与 JD 直接对应"],
+      "risks": [],
+      "unknowns": ["职级与汇报线"]
+    }
+  ],
+  "jobPostings": {
+    "example-job-1": {
+      "job": {
+        "id": "example-job-1",
+        "title": "用户增长运营专家",
+        "company": "本地数据示例公司",
+        "business": "（示例）由 AI 参谋写入的真实岗位放在这里",
+        "location": "上海",
+        "description": "（示例）负责核心产品增长实验与渠道运营。",
+        "requirements": "（示例）3 年以上增长经验；熟悉 A/B 实验。",
+        "sourceMode": "public_html",
+        "sourceLabel": "公司官网招聘页",
+        "sourceUrl": "https://example.com/careers/growth-ops",
+        "postedAt": "2026-09-05",
+        "liveStatus": "jd_verified",
+        "salary": "25K-35K · 14 薪"
+      },
+      "firstSeenAt": "2026-09-07T09:00:00.000Z",
+      "lastVerifiedAt": "2026-09-07T10:00:00.000Z",
+      "status": "live"
+    }
+  },
+  "sourceHealth": [
+    {
+      "id": "official-sites",
+      "label": "公司官网直投",
+      "mode": "public_html",
+      "status": "healthy",
+      "lastCheckedAt": "2026-09-07T10:00:00.000Z",
+      "detail": "（示例）官网岗位页可正常访问"
+    }
+  ],
+  "dailyRuns": [
+    {
+      "id": "run-example-1",
+      "startedAt": "2026-09-07T09:50:00.000Z",
+      "finishedAt": "2026-09-07T10:00:00.000Z",
+      "resultCount": 9,
+      "recommendedCount": 2,
+      "degradedSourceIds": []
+    }
+  ]
+}

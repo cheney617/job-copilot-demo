@@ -28,6 +28,7 @@ import {
   type WeightPreset,
 } from "./lib/domain";
 import { parseResumeFile, type ParsedResumeFile } from "./lib/resume-parser";
+import { loadWorkspaceFile } from "./lib/workspace-loader";
 import {
   workspaceApplications,
   workspaceBrowserSource,
@@ -389,52 +390,82 @@ export function JobCopilotApp() {
   const [resumeAdviceOpen, setResumeAdviceOpen] = useState(false);
   const [adviceAccepted, setAdviceAccepted] = useState(false);
   const [interviewPrepOpen, setInterviewPrepOpen] = useState(false);
+  const [liveDataAt, setLiveDataAt] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
+    let cancelled = false;
+    const boot = async () => {
       const requested =
         new URLSearchParams(window.location.search).get("portfolio") === "onboarding"
           ? "onboarding"
           : "workspace";
       const isWorkspace = requested === "workspace";
+      // 本地数据模式：AI 参谋写入的 workspace.json 优先于演示种子
+      const live = isWorkspace ? await loadWorkspaceFile() : null;
+      if (cancelled) return;
 
       setDemoMode(requested);
       setPreferences(
-        isWorkspace
-          ? portfolioPreferences
-          : {
-              ...portfolioPreferences,
-              inputMode: null,
-              role: "",
-              customRole: "",
-              currentCompany: "",
-            },
+        live?.preferences ??
+          (isWorkspace
+            ? portfolioPreferences
+            : {
+                ...portfolioPreferences,
+                inputMode: null,
+                role: "",
+                customRole: "",
+                currentCompany: "",
+              }),
       );
       setWeightPreset("balanced");
-      setCandidates(portfolioCandidates);
-      setApplications(portfolioApplications);
-      setResumeVersions(isWorkspace ? portfolioResumeVersions : []);
-      setJobPostings(portfolioJobPostings);
-      setEvents(portfolioEvents);
-      setSourceHealth(portfolioSourceHealth);
-      setDailyJob(portfolioDailyJob);
-      setDailyRuns(portfolioDailyRuns);
+      setCandidates(live?.candidates ?? portfolioCandidates);
+      setApplications(live?.applications ?? portfolioApplications);
+      setResumeVersions(live?.resumeVersions ?? (isWorkspace ? portfolioResumeVersions : []));
+      setJobPostings(live?.jobPostings ?? portfolioJobPostings);
+      setEvents(live?.events ?? portfolioEvents);
+      setSourceHealth(live?.sourceHealth ?? portfolioSourceHealth);
+      setDailyJob(live?.dailyJob ?? portfolioDailyJob);
+      setDailyRuns(live?.dailyRuns ?? portfolioDailyRuns);
       setBrowserSource(portfolioBrowserSource);
-      setSourceNote(portfolioSourceNote);
+      setSourceNote(live?.sourceNote ?? portfolioSourceNote);
+      const excludeCompany =
+        live?.preferences?.currentCompany ?? (isWorkspace ? portfolioPreferences.currentCompany : "");
       setCurrentCompanyExclusion({
-        company: isWorkspace ? portfolioPreferences.currentCompany : "",
-        count: isWorkspace ? 2 : 0,
+        company: excludeCompany,
+        count: live?.currentCompanyExcludedCount ?? (isWorkspace ? 2 : 0),
       });
-      setProfile(isWorkspace ? portfolioProfile : null);
+      setProfile(live?.profile ?? (isWorkspace ? portfolioProfile : null));
       setOnboardingComplete(isWorkspace);
       setStep(isWorkspace ? "home" : "resume");
       setSearchComplete(true);
       setResultsRevealed(isWorkspace);
+      setLiveDataAt(live?.generatedAt ?? null);
       setHydrated(true);
-    }, 0);
-    return () => window.clearTimeout(timer);
+    };
+    const timer = window.setTimeout(boot, 0);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
   }, []);
+
+  useEffect(() => {
+    if (!hydrated || !liveDataAt) return;
+    const timer = window.setInterval(async () => {
+      const next = await loadWorkspaceFile();
+      if (!next || next.generatedAt === liveDataAt) return;
+      // 只增量刷新"AI 参谋负责"的字段；投递状态等用户交互数据保持本地
+      if (next.candidates) setCandidates(next.candidates);
+      if (next.jobPostings) setJobPostings(next.jobPostings);
+      if (next.sourceHealth) setSourceHealth(next.sourceHealth);
+      if (next.dailyRuns) setDailyRuns(next.dailyRuns);
+      if (next.dailyJob) setDailyJob(next.dailyJob);
+      if (next.sourceNote) setSourceNote(next.sourceNote);
+      setLiveDataAt(next.generatedAt);
+    }, 8000);
+    return () => window.clearInterval(timer);
+  }, [hydrated, liveDataAt]);
 
   useEffect(() => {
     if (!hydrated || !dailyJob.enabled || !dailyJob.nextRunAt) return;
@@ -690,6 +721,12 @@ export function JobCopilotApp() {
 
   async function runSearch(mode: "full" | "rerank" = searchMode) {
     if (!profile) return;
+    if (liveDataAt) {
+      // 本地数据模式下搜索由 AI 参谋执行，界面不再用演示数据覆盖真实结果
+      setSourceNote("数据由你的 AI 参谋维护——对它说「今日扫描」即可刷新岗位");
+      setStep("results");
+      return;
+    }
     if (!preferences.noCurrentCompany && !preferences.currentCompany.trim()) {
       setSearchMode("full");
       setStep("preferences");
@@ -999,7 +1036,11 @@ export function JobCopilotApp() {
             <span>{onboardingComplete ? "Daily workspace" : "首次设置"}</span>
           </div>
         </div>
-        {demoMode && <div className="demo-badge">作品集演示 · 全部为虚拟数据</div>}
+        {demoMode && (
+          <div className="demo-badge">
+            {liveDataAt ? "本地数据 · 由你的 AI 参谋维护" : "作品集演示 · 全部为虚拟数据"}
+          </div>
+        )}
         {onboardingComplete ? (
           <nav aria-label="求职工作台" className="step-nav">
             {appNavItems.map((item) => (
@@ -1028,7 +1069,13 @@ export function JobCopilotApp() {
           </nav>
         )}
         <div className="sidebar-footer">
-          <span>{demoMode ? "演示模式不会访问真实岗位或账号" : "数据保存在当前设备"}</span>
+          <span>
+            {liveDataAt
+              ? "数据存于本地文件，由 AI 参谋写入，不上传"
+              : demoMode
+                ? "演示模式不会访问真实岗位或账号"
+                : "数据保存在当前设备"}
+          </span>
           {demoMode && (
             <Link
               href="/?portfolio=onboarding"
@@ -1061,7 +1108,7 @@ export function JobCopilotApp() {
             <header className="screen-header dashboard-header">
               <div>
                 <span className="eyebrow">TODAY · {formatChinaDashboardDate(dashboardNow)}</span>
-                <h1>{demoMode ? "林澈的求职总览" : "求职总览"}</h1>
+                <h1>{demoMode && !liveDataAt ? "林澈的求职总览" : "求职总览"}</h1>
                 <p>先跟进在行流程，再处理今天的新机会。</p>
               </div>
               <button className="secondary" onClick={() => setStep("automation")} type="button">
